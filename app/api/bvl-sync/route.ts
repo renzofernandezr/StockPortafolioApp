@@ -1,14 +1,16 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+function getSupabaseClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-if (!SUPABASE_URL || !SUPABASE_KEY) {
-  throw new Error('Missing Supabase environment variables (SUPABASE_SERVICE_ROLE_KEY required)');
+  if (!supabaseUrl || !supabaseKey) {
+    throw new Error('Missing Supabase environment variables (SUPABASE_SERVICE_ROLE_KEY required)');
+  }
+
+  return createClient(supabaseUrl, supabaseKey);
 }
-
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const BVL_ENDPOINT = 'https://dataondemand.bvl.com.pe/v1/stock-quote/daily';
 
@@ -50,7 +52,7 @@ function getHourKeyFromApi(lastDate: string): string {
   return getUtcHourKey(new Date(lastDate));
 }
 
-async function getMemonicos() {
+async function getMemonicos(supabase: ReturnType<typeof getSupabaseClient>) {
   const { data: acciones, error: accionesError } = await supabase
     .from('acciones')
     .select('nemonico')
@@ -101,10 +103,11 @@ async function fetchBvlDaily(nemonico: string, today: string) {
 
 export async function GET() {
   const now = new Date();
+  const supabase = getSupabaseClient();
 
   const today = getPeruDateString(now);
   const { startUtc, endUtc } = getPeruDayUtcRange(today);
-  const memonicos = await getMemonicos();
+  const memonicos = await getMemonicos(supabase);
 
   const summary = {
     executedAt: now.toISOString(),
