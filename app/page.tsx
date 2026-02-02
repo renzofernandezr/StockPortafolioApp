@@ -8,6 +8,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { getAcciones, getAllAccionesHistorial, getAccionesOperaciones } from '@/lib/supabase';
 import { formatMoney } from '@/lib/utils';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function PortfolioDashboard() {
   try {
     // Fetch data from Supabase
